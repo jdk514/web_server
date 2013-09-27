@@ -33,6 +33,7 @@
 #define MAX_DATA_SZ 1024
 #define MAX_CONCURRENCY 256
 
+
 /* 
  * This is the function for handling a _single_ request.  Understand
  * what each of the steps in this function do, so that you can handle
@@ -78,14 +79,37 @@ void
 server_processes(int accept_fd)
 {
 	int fd;
-	int pid;
+	int pid; //id of process
+	int endID; //int to see if child is still running
+	int status;
+	int pid_counter;
+	int pid_array[256]; //array of pids
+	int temp_counter; //index of temp array;
+	int i;
 
 	while(1) {
+
 		fd = server_accept(accept_fd);
+
+		if (pid_counter >= MAX_CONCURRENCY) {
+			wait(&status);
+			temp_counter = 0;
+			for (i = 0; i<pid_counter; i++) {
+				endID = waitpid(pid_array[i], &status, WNOHANG|WUNTRACED);
+				if (endID == 0) {
+					pid_array[temp_counter] = pid_array[i];
+					temp_counter++;
+				} else {
+					pid_counter--;
+				}
+			}
+		}
+
 		pid = fork();
-		if (pid < 0) {
-			printf("Error on fork %d\n", pid);
-			exit(-1);
+		if (pid != 0) {
+			pid_array[pid_counter] = pid;
+			printf("pid counter is %d\n", pid_counter);
+			pid_counter++;
 		}
 		if (pid == 0){
 			client_process(fd);			
