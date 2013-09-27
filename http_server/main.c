@@ -87,13 +87,20 @@ server_processes(int accept_fd)
 	int temp_counter; //index of temp array;
 	int i;
 
+	/*
+	/* For multiple process requests
+	/* continously iterate and create new fork()'s.
+	/* Use array to keep track of running processes
+	*/
+
 	while(1) {
 
 		fd = server_accept(accept_fd);
 
 		if (pid_counter >= MAX_CONCURRENCY) {
-			wait(&status);
+			wait(&status);//ensure that we clear up at least one process
 			temp_counter = 0;
+			//iterate through and remove any completed processes
 			for (i = 0; i<pid_counter; i++) {
 				endID = waitpid(pid_array[i], &status, WNOHANG|WUNTRACED);
 				if (endID == 0) {
@@ -107,7 +114,7 @@ server_processes(int accept_fd)
 
 		pid = fork();
 		if (pid != 0) {
-			pid_array[pid_counter] = pid;
+			pid_array[pid_counter] = pid;//add pid to list of running processes
 			printf("pid counter is %d\n", pid_counter);
 			pid_counter++;
 		}
