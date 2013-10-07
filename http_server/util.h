@@ -10,5 +10,8 @@
 #define UTIL_H
 
 void client_process(int fd);
+void client_process_thread(void* input);
+
+extern int pthread_counter;
 
 #endif

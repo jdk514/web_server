@@ -14,6 +14,9 @@
 #include <server.h>
 #include <simple_http.h>
 #include <content.h>
+#include <cas.h>
+
+int pthread_counter;
 
 /* 
  * newfd_create_req and respond_and_free_req functions are there to
@@ -137,5 +140,40 @@ client_process(int fd)
 		return;
 	}
 
+	respond_and_free_req(r, response, len);
+}
+
+void
+client_process_thread(void* input)
+{
+	struct http_req *r;
+	char *response;
+	int len;
+	int temp;
+	int fd = (int) input;
+
+	/* 
+	 * This code will be used to get the request and respond to
+	 * it.  This should probably be in the worker
+	 * threads/processes.
+	 */
+	r = newfd_create_req(fd);
+	if (!r || !r->path) {
+		close(fd);
+		return;
+	}
+	assert(r);
+	assert(r->path);
+
+	response = content_get(r->path, &len);
+	if (!response) {
+		shttp_free_req(r);
+		return;
+	}
+	pthread_counter--;
+/*	temp = pthread_counter;
+	while (cas(&pthread_counter, temp, temp--)) {
+		temp = pthread_counter;
+	}*/
 	respond_and_free_req(r, response, len);
 }

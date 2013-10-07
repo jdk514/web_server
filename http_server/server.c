@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <malloc.h>
 #include <unistd.h>
+#include <cas.h>
 
 /* 
  * Create the file descriptor to accept on.  Return -1 otherwise.
@@ -63,4 +64,3 @@ server_accept(int fd)
 	}
 	return new_fd;
 }
-
